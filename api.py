@@ -1,20 +1,20 @@
 """
-api.py — отдаёт вакансии из vacancies.db как JSON, с теми же фильтрами,
-что и на фронте (grade, format, city, поиск по тексту).
+api.py — отдаёт вакансии из общей Postgres-базы (Supabase) как JSON,
+с теми же фильтрами, что и на фронте (grade, format, city, поиск по тексту).
 
 Запуск:
-    pip install fastapi uvicorn
-    uvicorn api:app --reload --port 8000
+    uvicorn api:app --host 0.0.0.0 --port $PORT
 
 Проверить:
-    http://localhost:8000/api/vacancies
+    /api/vacancies
 """
 
 import json
-import sqlite3
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+
+from db import fetch_vacancies
 
 app = FastAPI()
 
@@ -26,8 +26,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DB_FILE = "vacancies.db"
-
 
 @app.get("/api/vacancies")
 def get_vacancies(
@@ -35,6 +33,16 @@ def get_vacancies(
     grade: str = Query(default=""),
     format: str = Query(default=""),
     city: str = Query(default=""),
+):
+    rows = fetch_vacancies(q=q, grade=grade, format=format, city=city)
+
+    result = []
+    for row in rows:
+        item = dict(row)
+        item["stack"] = json.loads(item["stack"] or "[]")
+        result.append(item)
+
+    return result    city: str = Query(default=""),
 ):
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
