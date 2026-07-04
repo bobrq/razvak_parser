@@ -23,6 +23,7 @@ def init_db():
                 uid TEXT PRIMARY KEY,
                 channel TEXT,
                 role TEXT,
+                category TEXT,
                 grade TEXT,
                 format TEXT,
                 city TEXT,
@@ -33,6 +34,8 @@ def init_db():
                 link TEXT
             )
         """)
+        # на случай, если таблица уже существовала без этого столбца
+        cur.execute("ALTER TABLE vacancies ADD COLUMN IF NOT EXISTS category TEXT")
     conn.commit()
     return conn
 
@@ -47,10 +50,11 @@ def save_vacancy(conn, record: dict):
     with conn.cursor() as cur:
         cur.execute(
             """INSERT INTO vacancies
-               (uid, channel, role, grade, format, city, salary, stack, description, date, link)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+               (uid, channel, role, category, grade, format, city, salary, stack, description, date, link)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                ON CONFLICT (uid) DO UPDATE SET
                    role = EXCLUDED.role,
+                   category = EXCLUDED.category,
                    grade = EXCLUDED.grade,
                    format = EXCLUDED.format,
                    city = EXCLUDED.city,
@@ -61,6 +65,7 @@ def save_vacancy(conn, record: dict):
                 record["uid"],
                 record["channel"],
                 record.get("role"),
+                record.get("category"),
                 record.get("grade"),
                 record.get("format"),
                 record.get("city"),
@@ -74,12 +79,15 @@ def save_vacancy(conn, record: dict):
     conn.commit()
 
 
-def fetch_vacancies(q="", grade="", format="", city="", limit=200):
+def fetch_vacancies(q="", category="", grade="", format="", city="", limit=200):
     conn = get_connection()
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
         sql = "SELECT * FROM vacancies WHERE 1=1"
         params = []
 
+        if category:
+            sql += " AND category = %s"
+            params.append(category)
         if grade:
             sql += " AND grade = %s"
             params.append(grade)
