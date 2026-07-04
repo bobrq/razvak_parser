@@ -35,11 +35,12 @@ app.add_middleware(
 @app.get("/api/vacancies")
 def get_vacancies(
     q: str = Query(default=""),
+    category: str = Query(default=""),
     grade: str = Query(default=""),
     format: str = Query(default=""),
     city: str = Query(default=""),
 ):
-    rows = fetch_vacancies(q=q, grade=grade, format=format, city=city)
+    rows = fetch_vacancies(q=q, category=category, grade=grade, format=format, city=city)
 
     result = []
     for row in rows:
@@ -53,23 +54,13 @@ def get_vacancies(
 @app.get("/run-parser")
 def run_parser(secret: str = Query(default="")):
     """
-    Запускает fetch.py + parse.py по HTTP-запросу.
-    Защищено секретным токеном, чтобы никто посторонний не мог
-    дёргать это и жечь твою квоту Gemini.
+    Запускает fetch.py + parse.py в фоне и сразу отвечает — так внешний
+    планировщик (cron-job.org) не упирается в свой таймаут ожидания ответа,
+    пока сам парсинг может идти ещё пару минут.
     """
     expected = os.environ.get("PARSER_SECRET")
     if not expected or secret != expected:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    result = subprocess.run(
-        "python fetch.py && python parse.py",
-        shell=True,
-        capture_output=True,
-        text=True,
-        timeout=600,
-    )
-    return {
-        "returncode": result.returncode,
-        "stdout": result.stdout[-3000:],
-        "stderr": result.stderr[-2000:],
-    }
+    subprocess.Popen("python fetch.py && python parse.py", shell=True)
+    return {"status": "started", "note": "парсинг запущен в фоне, проверь /api/vacancies через пару минут"}
