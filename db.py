@@ -28,7 +28,7 @@ def init_db():
                 city TEXT,
                 salary TEXT,
                 stack TEXT,
-                desc TEXT,
+                description TEXT,
                 date TEXT,
                 link TEXT
             )
@@ -47,7 +47,7 @@ def save_vacancy(conn, record: dict):
     with conn.cursor() as cur:
         cur.execute(
             """INSERT INTO vacancies
-               (uid, channel, role, grade, format, city, salary, stack, desc, date, link)
+               (uid, channel, role, grade, format, city, salary, stack, description, date, link)
                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                ON CONFLICT (uid) DO UPDATE SET
                    role = EXCLUDED.role,
@@ -56,7 +56,7 @@ def save_vacancy(conn, record: dict):
                    city = EXCLUDED.city,
                    salary = EXCLUDED.salary,
                    stack = EXCLUDED.stack,
-                   desc = EXCLUDED.desc""",
+                   description = EXCLUDED.description""",
             (
                 record["uid"],
                 record["channel"],
@@ -66,7 +66,7 @@ def save_vacancy(conn, record: dict):
                 record.get("city"),
                 record.get("salary"),
                 record.get("stack"),
-                record.get("desc"),
+                record.get("description"),
                 record["date"],
                 record["link"],
             ),
