@@ -42,36 +42,4 @@ def get_vacancies(
         item["stack"] = json.loads(item["stack"] or "[]")
         result.append(item)
 
-    return result    city: str = Query(default=""),
-):
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
-
-    sql = "SELECT * FROM vacancies WHERE 1=1"
-    params = []
-
-    if grade:
-        sql += " AND grade = ?"
-        params.append(grade)
-    if format:
-        sql += " AND format = ?"
-        params.append(format)
-    if city:
-        sql += " AND city = ?"
-        params.append(city)
-    if q:
-        sql += " AND (role LIKE ? OR stack LIKE ?)"
-        params += [f"%{q}%", f"%{q}%"]
-
-    sql += " ORDER BY date DESC LIMIT 200"
-
-    rows = conn.execute(sql, params).fetchall()
-    conn.close()
-
-    result = []
-    for row in rows:
-        item = dict(row)
-        item["stack"] = json.loads(item["stack"] or "[]")
-        result.append(item)
-
     return result
