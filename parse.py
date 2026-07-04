@@ -131,7 +131,7 @@ def main():
                 "city": fields.get("city"),
                 "salary": fields.get("salary"),
                 "stack": json.dumps(fields.get("stack", []), ensure_ascii=False),
-                "desc": fields.get("desc"),
+                "description": fields.get("desc"),
                 "date": record["date"],
                 "link": record["link"],
             })
