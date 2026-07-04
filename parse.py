@@ -26,7 +26,7 @@ client = OpenAI(
     api_key=os.environ["GEMINI_API_KEY"],
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
 )
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-3.1-flash-lite"
 
 RAW_FILE = "raw_posts.jsonl"
 
@@ -118,7 +118,7 @@ def main():
                 continue
 
             fields = extract_fields(record["text"])
-            time.sleep(1)  # на платном тарифе Gemini лимиты гораздо выше
+            time.sleep(4.2)  # Gemini 3.1 Flash Lite: лимит 15 запросов/мин
             if fields is None:
                 continue
 
