@@ -1,8 +1,8 @@
 """
 parse.py — читает raw_posts.jsonl, отсеивает то, что явно не вакансия,
-а остальное прогоняет через Google Gemini (бесплатный API) и извлекает
-структуру (role, grade, format, city, salary, stack, desc), складывая
-в общую Postgres-базу (Supabase) — ту же самую, которую читает api.py.
+а остальное прогоняет через Groq (бесплатный API, очень быстрый) и извлекает
+структуру (role, category, grade, format, city, salary, stack, desc),
+складывая в общую Postgres-базу (Supabase) — ту же самую, которую читает api.py.
 
 Запуск:
     python parse.py
@@ -20,13 +20,13 @@ from db import init_db, already_parsed, save_vacancy
 
 load_dotenv()
 
-# Gemini даёт бесплатный доступ (без кредитки) через OpenAI-совместимый
-# эндпоинт — меняем только base_url и имя модели
+# Groq бесплатен без кредитки и использует тот же протокол, что и OpenAI —
+# просто другой base_url и другое имя модели
 client = OpenAI(
-    api_key=os.environ["GEMINI_API_KEY"],
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    api_key=os.environ["GROQ_API_KEY"],
+    base_url="https://api.groq.com/openai/v1",
 )
-MODEL_NAME = "gemini-2.5-flash-lite"
+MODEL_NAME = "openai/gpt-oss-120b"  # актуальная модель на июль 2026, llama-3.3-70b устарела
 
 RAW_FILE = "raw_posts.jsonl"
 
@@ -128,7 +128,7 @@ def main():
                 continue
 
             fields = extract_fields(record["text"])
-            time.sleep(4.2)  # Gemini 3.1 Flash Lite: лимит 15 запросов/мин
+            time.sleep(2.1)  # Groq free tier: лимит 30 запросов/мин
             if fields is None:
                 continue
 
